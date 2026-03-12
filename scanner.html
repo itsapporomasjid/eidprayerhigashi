@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Higashi Kumin Center Eid Ticket Scanner</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="icon" type="image/png" href="images/his-logo.png">
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+body{
+font-family:Arial, Helvetica, sans-serif;
+background:#F7F9F8;
+margin:0;
+padding:20px;
+color:#2C2C2C;
+}
+
+.container{
+max-width:700px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:12px;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+text-align:center;
+}
+
+.header{
+margin-bottom:25px;
+}
+
+.logo{
+width:120px;
+margin-bottom:10px;
+}
+
+.header h1{
+margin:0;
+font-size:28px;
+color:#1F6F5C;
+}
+
+.header p{
+margin:5px 0 0 0;
+font-size:14px;
+color:#666;
+}
+
+#reader{
+width:100%;
+max-width:420px;
+margin:auto;
+}
+
+#result{
+margin-top:20px;
+font-size:22px;
+font-weight:bold;
+padding:15px;
+border-radius:8px;
+}
+
+.ok{
+background:#d4edda;
+color:#155724;
+}
+
+.used{
+background:#fff3cd;
+color:#856404;
+}
+
+.error{
+background:#f8d7da;
+color:#721c24;
+}
+
+footer{
+margin-top:25px;
+font-size:12px;
+color:#888;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<img src="images/his-logo.png" class="logo">
+
+<h1>Eid Ticket Scanner</h1>
+
+<p>Higashi Kumin Center</p>
+
+</div>
+
+<div id="reader"></div>
+
+<div id="result">Ready to scan ticket</div>
+
+<footer>
+Hokkaido Islamic Society
+</footer>
+
+</div>
+
+<script>
+
+/* Higashi Apps Script */
+const api="https://script.google.com/macros/s/AKfycbzw4Cx7gI9Uv_bEffzzayGVnw64lTgV8vfGVPfH7NNMSaY4vjwYtCyJLsoVXAycDMx3/exec"
+
+let scanner
+
+
+function formatBatch(batch){
+
+if(batch==930) return "9:30"
+if(batch==1030) return "10:30"
+
+return batch
+
+}
+
+
+function onScanSuccess(qrText){
+
+scanner.pause(true)
+
+let ticket=null
+let lines=qrText.split("\n")
+
+for(let i=0;i<lines.length;i++){
+
+if(lines[i].startsWith("Ticket:")){
+ticket=lines[i].replace("Ticket:","").trim()
+}
+
+}
+
+if(!ticket){
+
+showResult("❌ Invalid QR Code","error")
+resumeScanner()
+return
+
+}
+
+fetch(api+"?qr="+encodeURIComponent(ticket))
+.then(r=>r.json())
+.then(data=>{
+
+if(data.status=="OK"){
+
+let batch=formatBatch(data.batch)
+
+showResult(
+`✅ VALID<br>
+${data.name}<br>
+Batch ${batch}<br>
+Seats: ${data.seats}`,
+"ok"
+)
+
+}
+
+else if(data.status=="USED"){
+
+showResult("⚠️ Ticket Already Used","used")
+
+}
+
+else{
+
+showResult("❌ Ticket Not Found","error")
+
+}
+
+resumeScanner()
+
+})
+
+}
+
+
+function showResult(message,type){
+
+let box=document.getElementById("result")
+
+box.innerHTML=message
+box.className=type
+
+}
+
+
+function resumeScanner(){
+
+setTimeout(()=>{
+
+scanner.resume()
+
+document.getElementById("result").innerHTML="Ready to scan ticket"
+document.getElementById("result").className=""
+
+},3000)
+
+}
+
+
+window.onload=function(){
+
+scanner=new Html5QrcodeScanner(
+"reader",
+{
+fps:10,
+qrbox:{width:300,height:300}
+}
+)
+
+scanner.render(onScanSuccess)
+
+}
+
+</script>
+
+</body>
+
+</html>
