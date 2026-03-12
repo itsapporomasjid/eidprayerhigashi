@@ -117,23 +117,22 @@ Hokkaido Islamic Society
 
 <script>
 
-/* Higashi Apps Script */
 const api="https://script.google.com/macros/s/AKfycbzkDywB21CcrLROlKBhndCLoYZgWinE2ArqRTlEweoeNjpWproLG8lv9e2yKoXdiro/exec"
-let scanner
 
+let scanner
+let scanningPaused=false
 
 function formatBatch(batch){
-
 if(batch==930) return "9:30"
 if(batch==1030) return "10:30"
-
 return batch
-
 }
-
 
 function onScanSuccess(qrText){
 
+if(scanningPaused) return
+
+scanningPaused=true
 scanner.pause(true)
 
 let ticket=null
@@ -141,18 +140,16 @@ let lines=qrText.split("\n")
 
 for(let i=0;i<lines.length;i++){
 
-if(lines[i].startsWith("Ticket:")){
-ticket=lines[i].replace("Ticket:","").trim()
+if(lines[i].includes("Ticket:")){
+ticket=lines[i].split("Ticket:")[1].trim()
 }
 
 }
 
 if(!ticket){
-
 showResult("❌ Invalid QR Code","error")
 resumeScanner()
 return
-
 }
 
 fetch(api+"?qr="+encodeURIComponent(ticket))
@@ -164,48 +161,43 @@ if(data.status=="OK"){
 let batch=formatBatch(data.batch)
 
 showResult(
-`✅ VALID<br>
-${data.name}<br>
-Batch ${batch}<br>
-Seats: ${data.seats}`,
+`✅ VALID<br>${data.name}<br>Batch ${batch}<br>Seats: ${data.seats}`,
 "ok"
 )
 
 }
 
 else if(data.status=="USED"){
-
 showResult("⚠️ Ticket Already Used","used")
-
 }
 
 else{
-
 showResult("❌ Ticket Not Found","error")
-
 }
 
 resumeScanner()
 
 })
+.catch(()=>{
+showResult("⚠️ Connection Error","error")
+resumeScanner()
+})
 
 }
-
 
 function showResult(message,type){
 
 let box=document.getElementById("result")
-
 box.innerHTML=message
 box.className=type
 
 }
 
-
 function resumeScanner(){
 
 setTimeout(()=>{
 
+scanningPaused=false
 scanner.resume()
 
 document.getElementById("result").innerHTML="Ready to scan ticket"
@@ -214,7 +206,6 @@ document.getElementById("result").className=""
 },3000)
 
 }
-
 
 window.onload=function(){
 
