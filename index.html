@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Higashi Kumin Center Eid Al-Fitr Prayer Registration</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="icon" type="image/png" href="images/his-logo.png">
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<style>
+
+body{
+font-family:Arial, Helvetica, sans-serif;
+background:#F7F9F8;
+margin:0;
+padding:20px;
+color:#2C2C2C;
+}
+
+.container{
+max-width:650px;
+margin:auto;
+background:white;
+padding:30px;
+border-radius:12px;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+
+.header{
+text-align:center;
+margin-bottom:25px;
+}
+
+.logo{
+width:120px;
+margin-bottom:10px;
+}
+
+.header h1{
+margin:0;
+font-size:28px;
+color:#1F6F5C;
+}
+
+.header p{
+margin:5px 0 0 0;
+font-size:14px;
+color:#666;
+}
+
+label{
+display:block;
+margin-top:14px;
+font-weight:600;
+}
+
+input,select{
+width:100%;
+padding:12px;
+margin-top:6px;
+border-radius:6px;
+border:1px solid #ccc;
+font-size:14px;
+box-sizing:border-box;
+}
+
+button{
+background:#1F6F5C;
+color:white;
+padding:14px;
+border:none;
+width:100%;
+margin-top:20px;
+border-radius:6px;
+font-size:16px;
+font-weight:600;
+cursor:pointer;
+}
+
+button:hover{
+background:#175a4a;
+}
+
+#seatStatus{
+background:#f2f6f5;
+padding:15px;
+border-radius:8px;
+margin-bottom:20px;
+font-size:14px;
+}
+
+#totalSeats{
+background:#f0f0f0;
+font-weight:bold;
+}
+
+#ticket{
+max-width:420px;
+margin:auto;
+border:2px dashed #1F6F5C;
+border-radius:12px;
+padding:25px;
+text-align:center;
+background:white;
+}
+
+footer{
+margin-top:30px;
+text-align:center;
+font-size:12px;
+color:#888;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<img src="images/his-logo.png" class="logo">
+
+<h1>Higashi Kumin Center</h1>
+
+<p>Eid Al-Fitr Prayer Registration</p>
+
+</div>
+
+<h3>Seat Availability</h3>
+<div id="seatStatus">Loading...</div>
+
+<form id="eidForm">
+
+<label>Full Name</label>
+<input name="name" required>
+
+<label>Gender</label>
+<select name="gender">
+<option>Male</option>
+<option>Female</option>
+</select>
+
+<label>Email</label>
+<input type="email" name="email">
+
+<label>Phone</label>
+<input name="phone">
+
+<label>Number of Boys</label>
+<input type="number" name="boys_count" min="0" value="0">
+
+<label>Number of Girls</label>
+<input type="number" name="girls_count" min="0" value="0">
+
+<label>Total Seats Reserved</label>
+<input type="text" id="totalSeats" readonly>
+
+<label>Preferred Batch</label>
+<select name="batch"></select>
+
+<label>
+<input type="checkbox" required>
+I will attend according to the schedule stated in the ticket
+</label>
+
+<button type="submit" id="submitBtn">Register</button>
+
+</form>
+
+<footer>
+Organized by Hokkaido Islamic Society
+</footer>
+
+</div>
+
+<script>
+
+const api="https://script.google.com/macros/s/AKfycbzw4Cx7gI9Uv_bEffzzayGVnw64lTgV8vfGVPfH7NNMSaY4vjwYtCyJLsoVXAycDMx3/exec"
+
+
+function updateTotalSeats(){
+
+let boys=parseInt(document.querySelector("[name=boys_count]").value)||0
+let girls=parseInt(document.querySelector("[name=girls_count]").value)||0
+
+let total=1+boys+girls
+
+document.getElementById("totalSeats").value=
+`${total} seat(s) (1 adult + ${boys+girls} children)`
+
+}
+
+document.querySelector("[name=boys_count]").addEventListener("input",updateTotalSeats)
+document.querySelector("[name=girls_count]").addEventListener("input",updateTotalSeats)
+
+updateTotalSeats()
+
+
+
+function loadSeats(){
+
+fetch(api)
+.then(res=>res.json())
+.then(data=>{
+
+let html=""
+let dropdown=document.querySelector("select[name=batch]")
+
+dropdown.innerHTML=""
+
+const batches=[
+{value:930,label:"9:30"},
+{value:1030,label:"10:30"}
+]
+
+batches.forEach(b=>{
+
+let m=data[b.value].maleLeft
+let f=data[b.value].femaleLeft
+
+let isFull=(m<=0 && f<=0)
+
+html+=`
+<div>
+<b>${b.label}</b>
+Male left: ${m}/300 | Female left: ${f}/100 ${isFull?"<b>FULL</b>":""}
+</div>
+`
+
+let option=document.createElement("option")
+
+option.value=b.value
+
+if(isFull){
+option.text=`${b.label} (FULL)`
+option.disabled=true
+}else{
+option.text=`${b.label} (M:${m} F:${f})`
+}
+
+dropdown.appendChild(option)
+
+})
+
+document.getElementById("seatStatus").innerHTML=html
+
+})
+.catch(()=>{
+document.getElementById("seatStatus").innerHTML="Unable to load seat availability."
+})
+
+}
+
+loadSeats()
+setInterval(loadSeats,5000)
+
+
+
+document.getElementById("eidForm").addEventListener("submit",function(e){
+
+e.preventDefault()
+
+let boys=parseInt(document.querySelector("[name=boys_count]").value)||0
+let girls=parseInt(document.querySelector("[name=girls_count]").value)||0
+
+document.getElementById("submitBtn").disabled=true
+document.getElementById("submitBtn").innerText="Processing..."
+
+fetch(api,{
+method:"POST",
+body:new FormData(this)
+})
+.then(res=>res.json())
+.then(data=>{
+
+if(data.status=="OK"){
+
+let name=document.querySelector('[name=name]').value
+let seats=1+boys+girls
+
+let batchText = data.batch==930 ? "9:30 a.m." : "10:30 a.m."
+
+let qrData=`Higashi Kumin Center Eid Prayer
+Name:${name}
+Batch:${batchText}
+Seats:${seats}
+Ticket:${data.qr}`
+
+document.body.innerHTML=`
+
+<div id="ticket">
+
+<h2>Higashi Kumin Center</h2>
+<h3>Eid Al-Fitr Prayer</h3>
+
+<hr>
+
+<h2>${batchText}</h2>
+
+<p><strong>${name}</strong></p>
+
+<p>Seats Reserved: ${seats}</p>
+
+<img crossorigin="anonymous"
+src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrData)}">
+
+<p>Please show this ticket at the entrance.</p>
+
+</div>
+
+<button onclick="downloadTicket()">Download Ticket</button>
+
+`
+
+}else{
+
+alert("Registration full")
+
+}
+
+})
+
+.catch(()=>{
+alert("Registration failed")
+})
+
+})
+
+
+function downloadTicket(){
+
+html2canvas(document.querySelector("#ticket"),{
+useCORS:true,
+scale:3
+}).then(canvas=>{
+
+let link=document.createElement("a")
+link.download="eid-ticket.png"
+link.href=canvas.toDataURL("image/png")
+link.click()
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
