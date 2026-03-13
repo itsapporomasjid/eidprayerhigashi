@@ -92,6 +92,30 @@ margin-bottom:20px;
 font-size:14px;
 }
 
+.progressContainer{
+margin-top:8px;
+margin-bottom:15px;
+}
+
+.progressBar{
+width:100%;
+background:#e4e4e4;
+border-radius:6px;
+overflow:hidden;
+height:14px;
+}
+
+.progressFill{
+height:100%;
+background:#1F6F5C;
+}
+
+.locked{
+color:#b00;
+font-size:12px;
+margin-top:4px;
+}
+
 #totalSeats{
 background:#f0f0f0;
 font-weight:bold;
@@ -183,7 +207,6 @@ Organized by Hokkaido Islamic Society
 const api="https://script.google.com/macros/s/AKfycbz9qmP_cg4kYVzWPb6q-_vKCiKY6cnuEdBsJI89_VCblkk682vDMEt5-lLgdU2tUJlU/exec"
 
 
-
 function updateTotalSeats(){
 
 let boys=parseInt(document.querySelector("[name=boys_count]").value)||0
@@ -191,7 +214,7 @@ let girls=parseInt(document.querySelector("[name=girls_count]").value)||0
 
 let total=1+boys+girls
 
-document.getElementById("totalSeats").value =
+document.getElementById("totalSeats").value=
 `${total} seat(s) (1 adult + ${boys+girls} children)`
 
 }
@@ -200,6 +223,20 @@ document.querySelector("[name=boys_count]").addEventListener("input",updateTotal
 document.querySelector("[name=girls_count]").addEventListener("input",updateTotalSeats)
 
 updateTotalSeats()
+
+
+
+function createBar(percent){
+
+return `
+<div class="progressContainer">
+<div class="progressBar">
+<div class="progressFill" style="width:${percent}%"></div>
+</div>
+</div>
+`
+
+}
 
 
 
@@ -220,21 +257,35 @@ let f930=data[930].femaleLeft
 let m1030=data[1030].maleLeft
 let f1030=data[1030].femaleLeft
 
-let maleUsed930=300-m930
-let femaleUsed930=100-f930
+let used930=(300-m930)+(100-f930)
+let percent930=Math.round((used930/400)*100)
 
-let openNext = maleUsed930>=270 || femaleUsed930>=90
+let openNext=(300-m930>=270 || 100-f930>=90)
 
-html+=`<div><b>9:30 a.m.</b> Male left: ${m930}/300 | Female left: ${f930}/100</div>`
+html+=`<div><b>9:30 a.m.</b> ${percent930}% full`
+html+=createBar(percent930)
+html+=`Male left: ${m930}/300 | Female left: ${f930}/100</div>`
 
-html+=`<div><b>10:30 a.m.</b> Male left: ${m1030}/300 | Female left: ${f1030}/100 ${!openNext?"<b>(Locked until 9:30 reaches 90%)</b>":""}</div>`
+let used1030=(300-m1030)+(100-f1030)
+let percent1030=Math.round((used1030/400)*100)
+
+html+=`<div style="margin-top:10px;"><b>10:30 a.m.</b> ${percent1030}% full`
+html+=createBar(percent1030)
+html+=`Male left: ${m1030}/300 | Female left: ${f1030}/100`
+
+if(!openNext){
+html+=`<div class="locked">🔒 Locked until 9:30 reaches 90%</div>`
+}
+
+html+=`</div>`
+
 
 let option1=document.createElement("option")
 option1.value=930
 option1.text=`9:30 a.m. (M:${m930} F:${f930})`
 if(m930<=0 && f930<=0) option1.disabled=true
-
 dropdown.appendChild(option1)
+
 
 let option2=document.createElement("option")
 option2.value=1030
