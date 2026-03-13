@@ -127,7 +127,6 @@ color:#888;
 <img src="images/his-logo.png" class="logo">
 
 <h1>Higashi Kumin Center</h1>
-
 <p>Eid Al-Fitr Prayer Registration</p>
 
 </div>
@@ -184,6 +183,7 @@ Organized by Hokkaido Islamic Society
 const api="https://script.google.com/macros/s/AKfycbz9qmP_cg4kYVzWPb6q-_vKCiKY6cnuEdBsJI89_VCblkk682vDMEt5-lLgdU2tUJlU/exec"
 
 
+
 function updateTotalSeats(){
 
 let boys=parseInt(document.querySelector("[name=boys_count]").value)||0
@@ -191,7 +191,7 @@ let girls=parseInt(document.querySelector("[name=girls_count]").value)||0
 
 let total=1+boys+girls
 
-document.getElementById("totalSeats").value=
+document.getElementById("totalSeats").value =
 `${total} seat(s) (1 adult + ${boys+girls} children)`
 
 }
@@ -214,45 +214,44 @@ let dropdown=document.querySelector("select[name=batch]")
 
 dropdown.innerHTML=""
 
-const batches=[
-{value:930,label:"9:30"},
-{value:1030,label:"10:30"}
-]
+let m930=data[930].maleLeft
+let f930=data[930].femaleLeft
 
-batches.forEach(b=>{
+let m1030=data[1030].maleLeft
+let f1030=data[1030].femaleLeft
 
-let m=data[b.value].maleLeft
-let f=data[b.value].femaleLeft
+let maleUsed930=300-m930
+let femaleUsed930=100-f930
 
-let isFull=(m<=0 && f<=0)
+let openNext = maleUsed930>=270 || femaleUsed930>=90
 
-html+=`
-<div>
-<b>${b.label}</b>
-Male left: ${m}/300 | Female left: ${f}/100 ${isFull?"<b>FULL</b>":""}
-</div>
-`
+html+=`<div><b>9:30 a.m.</b> Male left: ${m930}/300 | Female left: ${f930}/100</div>`
 
-let option=document.createElement("option")
+html+=`<div><b>10:30 a.m.</b> Male left: ${m1030}/300 | Female left: ${f1030}/100 ${!openNext?"<b>(Locked until 9:30 reaches 90%)</b>":""}</div>`
 
-option.value=b.value
+let option1=document.createElement("option")
+option1.value=930
+option1.text=`9:30 a.m. (M:${m930} F:${f930})`
+if(m930<=0 && f930<=0) option1.disabled=true
 
-if(isFull){
-option.text=`${b.label} (FULL)`
-option.disabled=true
-}else{
-option.text=`${b.label} (M:${m} F:${f})`
+dropdown.appendChild(option1)
+
+let option2=document.createElement("option")
+option2.value=1030
+
+if(!openNext){
+option2.text="10:30 a.m. (Locked)"
+option2.disabled=true
+}
+else{
+option2.text=`10:30 a.m. (M:${m1030} F:${f1030})`
+if(m1030<=0 && f1030<=0) option2.disabled=true
 }
 
-dropdown.appendChild(option)
-
-})
+dropdown.appendChild(option2)
 
 document.getElementById("seatStatus").innerHTML=html
 
-})
-.catch(()=>{
-document.getElementById("seatStatus").innerHTML="Unable to load seat availability."
 })
 
 }
@@ -326,11 +325,8 @@ alert("Registration full")
 
 })
 
-.catch(()=>{
-alert("Registration failed")
 })
 
-})
 
 
 function downloadTicket(){
