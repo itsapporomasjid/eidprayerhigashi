@@ -238,6 +238,9 @@ fetch(api)
 let html=""
 let dropdown=document.querySelector("select[name=batch]")
 
+/* remember selected batch */
+let selectedBatch = dropdown.value
+
 dropdown.innerHTML=""
 
 let m930=data[930].maleLeft
@@ -272,6 +275,11 @@ option2.text=`10:30 a.m. (M:${m1030} F:${f1030})`
 if(m1030<=0 && f1030<=0) option2.disabled=true
 dropdown.appendChild(option2)
 
+/* restore selected batch */
+if(selectedBatch){
+dropdown.value = selectedBatch
+}
+
 document.getElementById("seatStatus").innerHTML=html
 
 })
@@ -279,7 +287,7 @@ document.getElementById("seatStatus").innerHTML=html
 }
 
 loadSeats()
-setInterval(loadSeats,5000)
+setInterval(loadSeats,10000)
 
 document.getElementById("eidForm").addEventListener("submit",function(e){
 
