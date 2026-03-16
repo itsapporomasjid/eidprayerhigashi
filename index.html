@@ -8,8 +8,6 @@
 
 <link rel="icon" type="image/png" href="images/his-logo.png">
 
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-
 <style>
 
 body{
@@ -51,6 +49,17 @@ font-size:14px;
 color:#666;
 }
 
+.notice{
+background:#fff3cd;
+border:1px solid #ffeeba;
+color:#856404;
+padding:18px;
+border-radius:8px;
+margin-bottom:25px;
+font-size:15px;
+line-height:1.6;
+}
+
 label{
 display:block;
 margin-top:14px;
@@ -68,7 +77,7 @@ box-sizing:border-box;
 }
 
 button{
-background:#1F6F5C;
+background:#999;
 color:white;
 padding:14px;
 border:none;
@@ -77,52 +86,16 @@ margin-top:20px;
 border-radius:6px;
 font-size:16px;
 font-weight:600;
-cursor:pointer;
+cursor:not-allowed;
 }
 
 button:hover{
-background:#175a4a;
-}
-
-#seatStatus{
-background:#f2f6f5;
-padding:15px;
-border-radius:8px;
-margin-bottom:20px;
-font-size:14px;
-}
-
-.progressContainer{
-margin-top:8px;
-margin-bottom:15px;
-}
-
-.progressBar{
-width:100%;
-background:#e4e4e4;
-border-radius:6px;
-overflow:hidden;
-height:14px;
-}
-
-.progressFill{
-height:100%;
-background:#1F6F5C;
+background:#999;
 }
 
 #totalSeats{
 background:#f0f0f0;
 font-weight:bold;
-}
-
-#ticket{
-max-width:420px;
-margin:auto;
-border:2px dashed #1F6F5C;
-border-radius:12px;
-padding:25px;
-text-align:center;
-background:white;
 }
 
 footer{
@@ -149,47 +122,60 @@ color:#888;
 
 </div>
 
-<h3>Seat Availability</h3>
-<div id="seatStatus">Loading...</div>
+<div class="notice">
+
+<strong>Registration Closed</strong><br><br>
+
+Hokkaido Islamic Society is <strong>not managing the Eid Prayer at Higashi Kumin Center this year</strong>.
+
+Therefore, registration through this page is no longer available.
+
+<br><br>
+
+Please contact the <strong>Indonesian Community in Sapporo</strong> for information regarding the Eid Prayer at Higashi Kumin Center.
+
+</div>
 
 <form id="eidForm">
 
 <label>Full Name</label>
-<input name="name" required>
+<input name="name" disabled>
 
 <label>Gender</label>
-<select name="gender">
+<select name="gender" disabled>
 <option>Male</option>
 <option>Female</option>
 </select>
 
 <label>Email</label>
-<input type="email" name="email">
+<input type="email" name="email" disabled>
 
 <label>Phone</label>
-<input name="phone">
+<input name="phone" disabled>
 
 <label>Number of Boys</label>
-<input type="number" name="boys_count" min="0" value="0">
+<input type="number" name="boys_count" min="0" value="0" disabled>
 
 <label>Number of Girls</label>
-<input type="number" name="girls_count" min="0" value="0">
+<input type="number" name="girls_count" min="0" value="0" disabled>
 
 <label>Wife</label>
-<input type="number" name="wife_count" min="0" value="0">
+<input type="number" name="wife_count" min="0" value="0" disabled>
 
 <label>Total Seats Reserved</label>
-<input type="text" id="totalSeats" readonly>
+<input type="text" id="totalSeats" value="Registration unavailable" readonly>
 
 <label>Preferred Batch</label>
-<select name="batch"></select>
+<select name="batch" disabled>
+<option>Registration closed</option>
+</select>
 
 <label>
-<input type="checkbox" required>
+<input type="checkbox" disabled>
 I will attend according to the schedule stated in the ticket
 </label>
 
-<button type="submit" id="submitBtn">Register</button>
+<button type="button" disabled>Registration Closed</button>
 
 </form>
 
@@ -198,192 +184,6 @@ Organized by Hokkaido Islamic Society
 </footer>
 
 </div>
-
-<script>
-
-const api="https://script.google.com/macros/s/AKfycbxZSdoN3NMY-UsCLapiKbRatU_FhU7SDg6Jqc6aDkXM9XjIS4Q7LYfux0fAG3Kw9-lR/exec"
-
-
-function updateTotalSeats(){
-
-let boys=parseInt(document.querySelector("[name=boys_count]").value)||0
-let girls=parseInt(document.querySelector("[name=girls_count]").value)||0
-let wife=parseInt(document.querySelector("[name=wife_count]").value)||0
-
-let total=1+boys+girls+wife
-
-document.getElementById("totalSeats").value=
-`${total} seat(s) (1 adult + ${boys+girls+wife} family members)`
-
-}
-
-document.querySelector("[name=boys_count]").addEventListener("input",updateTotalSeats)
-document.querySelector("[name=girls_count]").addEventListener("input",updateTotalSeats)
-document.querySelector("[name=wife_count]").addEventListener("input",updateTotalSeats)
-
-updateTotalSeats()
-
-
-function createBar(percent){
-
-return `
-<div class="progressContainer">
-<div class="progressBar">
-<div class="progressFill" style="width:${percent}%"></div>
-</div>
-</div>
-`
-
-}
-
-
-function loadSeats(){
-
-fetch(api)
-.then(res=>res.json())
-.then(data=>{
-
-let html=""
-let dropdown=document.querySelector("select[name=batch]")
-
-let selectedBatch = dropdown.value
-
-dropdown.innerHTML=""
-
-let m930=data[930].maleLeft
-let f930=data[930].femaleLeft
-
-let m1030=data[1030].maleLeft
-let f1030=data[1030].femaleLeft
-
-let used930=(300-m930)+(100-f930)
-let percent930=Math.round((used930/400)*100)
-
-html+=`<div><b>9:30 a.m.</b> ${percent930}% full`
-html+=createBar(percent930)
-html+=`Male left: ${m930}/300 | Female left: ${f930}/100</div>`
-
-let used1030=(300-m1030)+(100-f1030)
-let percent1030=Math.round((used1030/400)*100)
-
-html+=`<div style="margin-top:10px;"><b>10:30 a.m.</b> ${percent1030}% full`
-html+=createBar(percent1030)
-html+=`Male left: ${m1030}/300 | Female left: ${f1030}/100</div>`
-
-
-let option1=document.createElement("option")
-option1.value=930
-option1.text=`9:30 a.m. (M:${m930} F:${f930})`
-if(m930<=0 && f930<=0) option1.disabled=true
-dropdown.appendChild(option1)
-
-let option2=document.createElement("option")
-option2.value=1030
-option2.text=`10:30 a.m. (M:${m1030} F:${f1030})`
-if(m1030<=0 && f1030<=0) option2.disabled=true
-dropdown.appendChild(option2)
-
-
-if(selectedBatch){
-dropdown.value = selectedBatch
-}
-
-document.getElementById("seatStatus").innerHTML=html
-
-})
-
-}
-
-loadSeats()
-setInterval(loadSeats,10000)
-
-
-
-document.getElementById("eidForm").addEventListener("submit",function(e){
-
-e.preventDefault()
-
-let boys=parseInt(document.querySelector("[name=boys_count]").value)||0
-let girls=parseInt(document.querySelector("[name=girls_count]").value)||0
-let wife=parseInt(document.querySelector("[name=wife_count]").value)||0
-
-document.getElementById("submitBtn").disabled=true
-document.getElementById("submitBtn").innerText="Processing..."
-
-fetch(api,{
-method:"POST",
-body:new FormData(this)
-})
-.then(res=>res.json())
-.then(data=>{
-
-if(data.status=="OK"){
-
-let name=document.querySelector('[name=name]').value
-let seats=1+boys+girls+wife
-
-let batchText = data.batch==930 ? "9:30 a.m." : "10:30 a.m."
-
-let qrData=`Higashi Kumin Center Eid Prayer
-Name:${name}
-Batch:${batchText}
-Seats:${seats}
-Ticket:${data.qr}`
-
-document.body.innerHTML=`
-
-<div id="ticket">
-
-<h2>Higashi Kumin Center</h2>
-<h3>Eid Al-Fitr Prayer</h3>
-
-<hr>
-
-<h2>Batch ${batchText}</h2>
-
-<p><strong>${name}</strong></p>
-
-<p>Seats Reserved: ${seats}</p>
-
-<img crossorigin="anonymous"
-src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrData)}">
-
-<p>Please show this ticket at the entrance.</p>
-
-</div>
-
-<button onclick="downloadTicket()">Download Ticket</button>
-
-`
-
-}else{
-
-alert("Registration full")
-
-}
-
-})
-
-})
-
-
-function downloadTicket(){
-
-html2canvas(document.querySelector("#ticket"),{
-useCORS:true,
-scale:3
-}).then(canvas=>{
-
-let link=document.createElement("a")
-link.download="eid-ticket.png"
-link.href=canvas.toDataURL("image/png")
-link.click()
-
-})
-
-}
-
-</script>
 
 </body>
 </html>
